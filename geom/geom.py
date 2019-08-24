@@ -21,30 +21,18 @@ for i in range(mol.natom):
   for j in range(i+1, mol.natom):
     for k in range(j+1, mol.natom):
       if np.less([mol.bond_length(i,j),mol.bond_length(j,k)], [4.0,4.0]).all():
-        print(i, j, k, mol.bond_angle(i, j, k)*180.0/np.pi)
+        print('A(',i,',', j,',' k,')', mol.bond_angle(i, j, k)*180.0/np.pi)
 
 # print dihedral angles
 for i in range(mol.natom):
   for j in range(i+1, mol.natom):
     for k in range(j+1, mol.natom):
       for l in range(k+1, mol.natom):
-        if np.less([mol.bond_length(i,j),mol.bond_length(j,k),mol.bond_length(k,l)], [4.0,4.0,4.0]).all():
-          print(i, j, k,l,  mol.dihedral_angle(i, j, k, l)*180.0/np.pi)
+        if np.less([mol.bond_length(i,j),mol.bond_length(j,k),mol.bond_length(k,l)],
+                     [4.0,4.0,4.0]).all():
+          print('D(',i,',', j,',' k, ',', l,')', mol.dihedral_angle(i, j, k, l)*180.0/np.pi)
 
-# translate the coordinate
-mol.translate(-mol.cent_of_mass)
-
-# build moment of inertia tensor
-mol.mom_i_tensor = np.zeros((3, 3))
-mol.mom_i_tensor[0, 0] = (mol.atms_mass * (mol.coord[:,1]**2 + mol.coord[:,2]**2)).sum()
-mol.mom_i_tensor[1, 1] = (mol.atms_mass * (mol.coord[:,0]**2 + mol.coord[:,2]**2)).sum()
-mol.mom_i_tensor[2, 2] = (mol.atms_mass * (mol.coord[:,0]**2 + mol.coord[:,1]**2)).sum()
-mol.mom_i_tensor[0, 1] = (mol.atms_mass * mol.coord[:,0] * mol.coord[:,1]).sum()
-mol.mom_i_tensor[0, 2] = (mol.atms_mass * mol.coord[:,0] * mol.coord[:,2]).sum()
-mol.mom_i_tensor[1, 2] = (mol.atms_mass * mol.coord[:,1] * mol.coord[:,2]).sum()
-mol.mom_i_tensor[1, 0] = mol.mom_i_tensor[0, 1]
-mol.mom_i_tensor[2, 0] = mol.mom_i_tensor[0, 2]
-mol.mom_i_tensor[2, 1] = mol.mom_i_tensor[1, 2]
+# print moment of inertia tensor
 print(mol.mom_i_tensor)
 
 mol.pri_mom_i, v = eigh(mol.mom_i_tensor)

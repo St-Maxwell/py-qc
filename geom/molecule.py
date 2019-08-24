@@ -1,4 +1,5 @@
 import numpy as np
+import numpy.linalg as la
 
 h = 6.62607015E-34
 c = 2.99792458E8
@@ -31,19 +32,20 @@ class Molecule(object):
     self.mass = np.sum(self.atms_mass)
     self.coord = input_data[:,1:]
     self.cent_of_mass = (self.atms_mass[:,np.newaxis]*self.coord).sum(axis=0) / self.mass
-
-  def vec_mode(self, vec):
-    return np.sqrt( np.power(vec, 2).sum() )
+    self.coord -= self.cent_of_mass
+    self.mom_i_tensor = np.einsum('i,ij,ik->jk', 
+                                  self.atms_mass, self.coord, self.coord)
+    self.mom_i_tensor = np.eye(3) * self.mom_i_tensor.trace() - self.mom_i_tensor
 
   def bond_length(self, i, j):
-    return self.vec_mode( self.coord[i,:] - self.coord[j,:] )
+    return la.norm( self.coord[i,:] - self.coord[j,:] )
 
   def bond_angle(self, i, j, k):
     if not is_unique(i, j, k):
       raise ValueError('only three different atoms(i, j, k) are accepted.')
     vec1 = self.coord[i,:] - self.coord[j,:]
     vec2 = self.coord[k,:] - self.coord[j,:]
-    return np.arccos( vec1.dot(vec2) / (self.vec_mode(vec1) * self.vec_mode(vec2)) )
+    return np.arccos( vec1.dot(vec2) / (la.norm(vec1) * la.norm(vec2)) )
 
   def dihedral_angle(self, i, j, k, l):
     if not is_unique(i, j, k, l):
@@ -53,7 +55,7 @@ class Molecule(object):
     vec3 = self.coord[l,:] - self.coord[k,:]
     n1 = np.cross(vec1, vec2)
     n2 = np.cross(vec2, vec3)
-    di_ang = np.arccos( n1.dot(n2) / (self.vec_mode(n1) * self.vec_mode(n2)) )
+    di_ang = np.arccos( n1.dot(n2) / (la.norm(n1) * la.norm(n2)) )
     vec4 = np.cross(n2, vec2)
     if ( n1.dot(vec4) > 0):
       return di_ang
@@ -63,5 +65,5 @@ class Molecule(object):
     self.coord += vec
 
   def print_coord(self):
-    for i  in range(self.natom):
+    for i in range(self.natom):
       print(' %s\t%.6f\t%.6f\t%.6f' % (self.atms_symb[i], self.coord[i,0], self.coord[i,1], self.coord[i,2]))
